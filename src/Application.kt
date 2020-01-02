@@ -1,6 +1,7 @@
 package com.pratama
 
 import io.ktor.application.*
+import io.ktor.features.StatusPages
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.response.*
@@ -13,29 +14,38 @@ import io.ktor.server.netty.Netty
 
 fun main(args: Array<String>) {
     embeddedServer(
-        Netty,
-        port = 3030,
-        host = "localhost",
-        module = Application::mainModule
+            Netty,
+            port = 3030,
+            host = "localhost",
+            module = Application::mainModule
     )
-        .start(wait = true)
+            .start(wait = true)
 }
 
 fun Application.mainModule() {
+    install(StatusPages){
+        exception<Throwable> { cause ->
+            call.respond(HttpStatusCode.InternalServerError)
+        }
+    }
     routing {
         root()
     }
 }
 
 fun Routing.root() {
+    get("/healthcheck") {
+        call.respondText("OK")
+    }
+
     get("/") {
         call.respondText("Hello World")
     }
     get("/profile") {
         call.respondText(
-            contentType = ContentType.Application.Json,
-            status = HttpStatusCode.OK,
-            text = "user"
+                contentType = ContentType.Application.Json,
+                status = HttpStatusCode.OK,
+                text = "user"
         )
     }
 }
