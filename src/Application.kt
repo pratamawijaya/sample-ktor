@@ -1,6 +1,8 @@
 package com.pratama
 
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.pratama.domain.model.PostSnippet
+import com.pratama.domain.model.Snippet
 import com.pratama.domain.model.snippets
 import io.ktor.application.*
 import io.ktor.features.ContentNegotiation
@@ -12,6 +14,7 @@ import io.ktor.response.*
 import io.ktor.request.*
 import io.ktor.routing.Routing
 import io.ktor.routing.get
+import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -57,6 +60,12 @@ fun Routing.root() {
 
     get("/snippets") {
         call.respond(mapOf("snippets" to synchronized(snippets) { snippets.toList() }))
+    }
+
+    post("/snippets") {
+        val post = call.receive<PostSnippet>()
+        snippets += Snippet(post.snippet.text)
+        call.respond(mapOf("Success" to true))
     }
 
     get("/profile") {
