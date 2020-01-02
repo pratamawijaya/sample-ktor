@@ -10,7 +10,7 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 
 fun main(args: Array<String>) {
-    val server = embeddedServer(Netty, 3030) {
+    val server = embeddedServer(Netty, port = 3030, host = "localhost") {
         routing {
             get("/") {
                 call.respondText("Hello World", ContentType.Text.Html)
