@@ -1,9 +1,13 @@
 package com.pratama
 
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.pratama.domain.model.snippets
 import io.ktor.application.*
+import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.jackson.jackson
 import io.ktor.response.*
 import io.ktor.request.*
 import io.ktor.routing.Routing
@@ -11,6 +15,7 @@ import io.ktor.routing.get
 import io.ktor.routing.routing
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import java.text.DateFormat
 
 fun main(args: Array<String>) {
     embeddedServer(
@@ -23,11 +28,19 @@ fun main(args: Array<String>) {
 }
 
 fun Application.mainModule() {
-    install(StatusPages){
+    install(StatusPages) {
         exception<Throwable> { cause ->
             call.respond(HttpStatusCode.InternalServerError)
         }
     }
+
+    install(ContentNegotiation) {
+        jackson {
+            enable(SerializationFeature.INDENT_OUTPUT)
+            dateFormat = DateFormat.getDateInstance()
+        }
+    }
+
     routing {
         root()
     }
@@ -41,6 +54,11 @@ fun Routing.root() {
     get("/") {
         call.respondText("Hello World")
     }
+
+    get("/snippets") {
+        call.respond(mapOf("snippets" to synchronized(snippets) { snippets.toList() }))
+    }
+
     get("/profile") {
         call.respondText(
                 contentType = ContentType.Application.Json,
