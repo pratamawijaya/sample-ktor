@@ -6,9 +6,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.pratama.domain.model.*
 import io.ktor.application.*
-import io.ktor.auth.Authentication
-import io.ktor.auth.UserIdPrincipal
-import io.ktor.auth.authenticate
+import io.ktor.auth.*
 import io.ktor.auth.jwt.jwt
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.StatusPages
@@ -54,6 +52,9 @@ fun Application.mainModule() {
         exception<Throwable> {
             call.respond(HttpStatusCode.InternalServerError)
         }
+        exception<InvalidCredentialsException> { exception ->
+            call.respond(HttpStatusCode.Unauthorized, mapOf("OK" to false, "error" to (exception.msg ?: "")))
+        }
     }
 
     install(ContentNegotiation) {
@@ -93,7 +94,8 @@ fun Routing.root(simpleJWT: SimpleJWT) {
         authenticate {
             post {
                 val post = call.receive<PostSnippet>()
-                snippets += Snippet(post.snippet.text)
+                val principal = call.principal<UserIdPrincipal>() ?: error("No principal")
+                snippets += Snippet(principal.name, post.snippet.text)
                 call.respond(mapOf("Success" to true))
             }
         }
